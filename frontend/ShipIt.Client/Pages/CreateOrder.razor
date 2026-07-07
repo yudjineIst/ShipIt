@@ -1,0 +1,134 @@
+@page "/orders/create"
+@inject OrdersApiClient ApiClient
+@inject NavigationManager Navigation
+
+<PageTitle>Новый заказ | ShipIt</PageTitle>
+
+<div class="page-heading">
+    <div>
+        <h1>Новый заказ</h1>
+        <p class="text-muted">Заполните данные отправления и дату забора груза.</p>
+    </div>
+    <a class="btn btn-outline-secondary" href="orders">К списку заказов</a>
+</div>
+
+@if (_error is not null)
+{
+    <div class="alert alert-danger" role="alert">@_error</div>
+}
+
+<EditForm Model="_model" OnValidSubmit="CreateAsync" FormName="create-order" class="order-form">
+    <DataAnnotationsValidator />
+
+    <div class="form-section">
+        <h2>Отправитель</h2>
+        <div class="row g-3">
+            <div class="col-md-4"><label class="form-label" for="sender-city">Город</label>
+                <InputText id="sender-city" class="form-control" @bind-Value="_model.SenderCity"
+                    placeholder="Москва" />
+                <ValidationMessage For="() => _model.SenderCity" /></div>
+            <div class="col-md-4"><label class="form-label" for="sender-street">Улица</label>
+                <InputText id="sender-street" class="form-control" @bind-Value="_model.SenderStreet"
+                    placeholder="Ленинградский проспект" />
+                <ValidationMessage For="() => _model.SenderStreet" /></div>
+            <div class="col-md-2"><label class="form-label" for="sender-house">Дом</label>
+                <InputText id="sender-house" class="form-control" @bind-Value="_model.SenderHouse"
+                    placeholder="36А" />
+                <ValidationMessage For="() => _model.SenderHouse" /></div>
+            <div class="col-md-2"><label class="form-label" for="sender-apartment">Квартира</label>
+                <InputNumber id="sender-apartment" class="form-control" @bind-Value="_model.SenderApartment"
+                    ParsingErrorMessage="Введите корректный номер квартиры." />
+                <ValidationMessage For="() => _model.SenderApartment" /></div>
+        </div>
+    </div>
+
+    <div class="form-section">
+        <h2>Получатель</h2>
+        <div class="row g-3">
+            <div class="col-md-4"><label class="form-label" for="recipient-city">Город</label>
+                <InputText id="recipient-city" class="form-control" @bind-Value="_model.RecipientCity"
+                    placeholder="Санкт-Петербург" />
+                <ValidationMessage For="() => _model.RecipientCity" /></div>
+            <div class="col-md-4"><label class="form-label" for="recipient-street">Улица</label>
+                <InputText id="recipient-street" class="form-control" @bind-Value="_model.RecipientStreet"
+                    placeholder="Невский проспект" />
+                <ValidationMessage For="() => _model.RecipientStreet" /></div>
+            <div class="col-md-2"><label class="form-label" for="recipient-house">Дом</label>
+                <InputText id="recipient-house" class="form-control" @bind-Value="_model.RecipientHouse"
+                    placeholder="28" />
+                <ValidationMessage For="() => _model.RecipientHouse" /></div>
+            <div class="col-md-2"><label class="form-label" for="recipient-apartment">Квартира</label>
+                <InputNumber id="recipient-apartment" class="form-control" @bind-Value="_model.RecipientApartment"
+                    ParsingErrorMessage="Введите корректный номер квартиры." />
+                <ValidationMessage For="() => _model.RecipientApartment" /></div>
+        </div>
+    </div>
+
+    <div class="form-section">
+        <h2>Отправление</h2>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label" for="cargo-weight">Вес груза, кг</label>
+                <InputText id="cargo-weight" class="form-control" @bind-Value="_model.CargoWeight"
+                    inputmode="decimal" />
+                <div class="form-text">Можно указать через запятую или точку: 12,5</div>
+                <ValidationMessage For="() => _model.CargoWeight" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="pickup-date">Дата получения груза</label>
+                <InputDate id="pickup-date" class="form-control" @bind-Value="_model.PickupDate"
+                    ParsingErrorMessage="Введите корректную дату." min="@MinimumPickupDate" />
+                <ValidationMessage For="() => _model.PickupDate" />
+            </div>
+        </div>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary" disabled="@_isSaving">@SubmitButtonText</button>
+        <a class="btn btn-cancel" href="orders">Отмена</a>
+    </div>
+</EditForm>
+
+@code {
+    private readonly CreateOrderFormModel _model = new();
+    private bool _isSaving;
+    private string? _error;
+    private string MinimumPickupDate => DateOnly.FromDateTime(DateTime.Today).ToString("yyyy-MM-dd");
+
+    private string SubmitButtonText
+    {
+        get
+        {
+            if (_isSaving)
+            {
+                return "Создание...";
+            }
+
+            return "Создать заказ";
+        }
+    }
+
+    private async Task CreateAsync()
+    {
+        _isSaving = true;
+        _error = null;
+        try
+        {
+            var created = await ApiClient.CreateOrderAsync(_model.ToRequest());
+            if (created is null)
+            {
+                throw new InvalidOperationException("Сервер вернул пустой ответ.");
+            }
+
+            Navigation.NavigateTo($"/orders/{created.Id}");
+        }
+        catch (Exception exception)
+        {
+            _error = $"Не удалось создать заказ. {exception.Message}";
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+}

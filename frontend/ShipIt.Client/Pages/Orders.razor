@@ -1,0 +1,98 @@
+@page "/orders"
+@using System.Globalization
+@inject OrdersApiClient ApiClient
+@inject NavigationManager Navigation
+
+<PageTitle>Заказы | ShipIt</PageTitle>
+
+<div class="page-heading">
+    <div>
+        <h1>Заказы</h1>
+        <p class="text-muted">Все заказы на доставку. Сначала показаны новые.</p>
+    </div>
+    <a class="btn btn-primary" href="orders/create">Создать заказ</a>
+</div>
+
+@if (_isLoading)
+{
+    <p>Загрузка заказов...</p>
+}
+else if (_error is not null)
+{
+    <div class="alert alert-danger" role="alert">@_error</div>
+    <button class="btn btn-outline-primary" @onclick="LoadOrdersAsync">Повторить</button>
+}
+else if (_orders.Count == 0)
+{
+    <div class="empty-state">
+        <h2>Заказов пока нет</h2>
+        <p>Создайте первый заказ на доставку.</p>
+        <a class="btn btn-primary" href="orders/create">Создать заказ</a>
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover align-middle orders-table">
+            <thead>
+                <tr>
+                    <th>Номер заказа</th>
+                    <th>Отправитель</th>
+                    <th>Получатель</th>
+                    <th>Вес</th>
+                    <th>Дата получения</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var order in _orders)
+            {
+                <tr class="order-row" tabindex="0" @onclick="() => OpenOrder(order.Id)"
+                    @onkeydown="args => HandleKeyDown(args, order.Id)">
+                    <td><strong>@order.OrderNumber</strong></td>
+                    <td>@order.SenderCity<br /><span class="text-muted">@AddressDisplayFormatter.Format(order.SenderStreet, order.SenderHouse, order.SenderApartment)</span></td>
+                    <td>@order.RecipientCity<br /><span class="text-muted">@AddressDisplayFormatter.Format(order.RecipientStreet, order.RecipientHouse, order.RecipientApartment)</span></td>
+                    <td class="order-weight">@order.CargoWeight.ToString("0.###")&nbsp;кг</td>
+                    <td class="order-date">@order.PickupDate.ToString("dd MMM yyyy", RussianCulture)</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    private IReadOnlyList<OrderListItem> _orders = [];
+    private static readonly CultureInfo RussianCulture = CultureInfo.GetCultureInfo("ru-RU");
+    private bool _isLoading = true;
+    private string? _error;
+
+    protected override Task OnInitializedAsync() => LoadOrdersAsync();
+
+    private async Task LoadOrdersAsync()
+    {
+        _isLoading = true;
+        _error = null;
+        try
+        {
+            _orders = await ApiClient.GetOrdersAsync();
+        }
+        catch (Exception exception)
+        {
+            _error = $"Не удалось загрузить заказы. {exception.Message}";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void OpenOrder(Guid id) => Navigation.NavigateTo($"/orders/{id}");
+
+    private void HandleKeyDown(KeyboardEventArgs args, Guid id)
+    {
+        if (args.Key is "Enter" or " ")
+        {
+            OpenOrder(id);
+        }
+    }
+}

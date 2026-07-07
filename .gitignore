@@ -1,0 +1,11 @@
+bin/
+obj/
+.vs/
+.idea/
+node_modules/
+dist/
+shipit.db
+*.db
+*.db-shm
+*.db-wal
+.env

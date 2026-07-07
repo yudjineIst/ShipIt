@@ -1,0 +1,121 @@
+@page "/orders/{Id:guid}"
+@using System.Globalization
+@inject OrdersApiClient ApiClient
+
+<PageTitle>Заказ | ShipIt</PageTitle>
+
+<div class="page-heading">
+    <div>
+        <h1>Информация о заказе</h1>
+        @if (_order is not null)
+        {
+            <p class="text-muted">@_order.OrderNumber</p>
+        }
+    </div>
+    <a class="btn btn-outline-secondary" href="orders">К списку заказов</a>
+</div>
+
+@if (_isLoading)
+{
+    <p>Загрузка заказа...</p>
+}
+else if (_error is not null)
+{
+    <div class="alert alert-danger" role="alert">@_error</div>
+}
+else if (_order is null)
+{
+    <div class="alert alert-warning" role="alert">Информация о заказе недоступна.</div>
+}
+else
+{
+    <div class="details-card">
+        <dl class="details-grid">
+            <div>
+                <dt>Номер заказа</dt>
+                <dd>@_order.OrderNumber</dd>
+            </div>
+            <div>
+                <dt>Создан, UTC</dt>
+                <dd>@_order.CreatedAtUtc.ToString("dd MMM yyyy, HH:mm", RussianCulture)</dd>
+            </div>
+            <div>
+                <dt>Город отправителя</dt>
+                <dd>@_order.SenderCity</dd>
+            </div>
+            <div>
+                <dt>Улица отправителя</dt>
+                <dd>@_order.SenderStreet</dd>
+            </div>
+            <div>
+                <dt>Дом отправителя</dt>
+                <dd>@_order.SenderHouse</dd>
+            </div>
+            <div>
+                <dt>Квартира отправителя</dt>
+                <dd>@FormatApartment(_order.SenderApartment)</dd>
+            </div>
+            <div>
+                <dt>Город получателя</dt>
+                <dd>@_order.RecipientCity</dd>
+            </div>
+            <div>
+                <dt>Улица получателя</dt>
+                <dd>@_order.RecipientStreet</dd>
+            </div>
+            <div>
+                <dt>Дом получателя</dt>
+                <dd>@_order.RecipientHouse</dd>
+            </div>
+            <div>
+                <dt>Квартира получателя</dt>
+                <dd>@FormatApartment(_order.RecipientApartment)</dd>
+            </div>
+            <div>
+                <dt>Вес груза</dt>
+                <dd>@_order.CargoWeight.ToString("0.###") кг</dd>
+            </div>
+            <div>
+                <dt>Дата получения груза</dt>
+                <dd>@_order.PickupDate.ToString("dd MMM yyyy", RussianCulture)</dd>
+            </div>
+        </dl>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+    private static readonly CultureInfo RussianCulture = CultureInfo.GetCultureInfo("ru-RU");
+    private ShipIt.Client.Models.OrderDetails? _order;
+    private bool _isLoading = true;
+    private string? _error;
+
+    private static string FormatApartment(int? apartment)
+    {
+        if (apartment.HasValue)
+        {
+            return apartment.Value.ToString();
+        }
+
+        return "Не указана";
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _isLoading = true;
+        _error = null;
+        try
+        {
+            _order = await ApiClient.GetOrderByIdAsync(Id);
+        }
+        catch (Exception exception)
+        {
+            _error = $"Не удалось загрузить заказ. {exception.Message}";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+}

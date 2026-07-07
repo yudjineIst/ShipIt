@@ -1,0 +1,18 @@
+@ShipIt.Api_HostAddress = http://localhost:5100
+
+GET {{ShipIt.Api_HostAddress}}/api/orders
+Accept: application/json
+
+###
+
+POST {{ShipIt.Api_HostAddress}}/api/orders
+Content-Type: application/json
+
+{
+  "senderCity": "Москва",
+  "senderAddress": "Тверская улица, 10",
+  "recipientCity": "Тула",
+  "recipientAddress": "Советская улица, 12",
+  "cargoWeight": 3.5,
+  "pickupDate": "2026-07-10"
+}
