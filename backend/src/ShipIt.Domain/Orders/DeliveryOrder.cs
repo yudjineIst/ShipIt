@@ -55,29 +55,29 @@ public sealed class DeliveryOrder
         DateTime createdAtUtc)
     {
         if (pickupDate == default || pickupDate < DateOnly.FromDateTime(createdAtUtc))
-            return Result<DeliveryOrder>.Failure(OrderErrors.ValidationFailed);
+            return OrderErrors.ValidationFailed;
 
         var senderCityResult = City.Create(senderCity);
         if (senderCityResult.IsFailure)
-            return Result<DeliveryOrder>.Failure(senderCityResult.Error);
+            return senderCityResult.Error;
 
         var senderAddressResult = Address.Create(senderStreet, senderHouse, senderApartment);
         if (senderAddressResult.IsFailure)
-            return Result<DeliveryOrder>.Failure(senderAddressResult.Error);
+            return senderAddressResult.Error;
 
         var recipientCityResult = City.Create(recipientCity);
         if (recipientCityResult.IsFailure)
-            return Result<DeliveryOrder>.Failure(recipientCityResult.Error);
+            return recipientCityResult.Error;
 
         var recipientAddressResult = Address.Create(recipientStreet, recipientHouse, recipientApartment);
         if (recipientAddressResult.IsFailure)
-            return Result<DeliveryOrder>.Failure(recipientAddressResult.Error);
+            return recipientAddressResult.Error;
 
         var cargoWeightResult = CargoWeight.Create(cargoWeight);
         if (cargoWeightResult.IsFailure)
-            return Result<DeliveryOrder>.Failure(cargoWeightResult.Error);
+            return cargoWeightResult.Error;
 
-        return Result<DeliveryOrder>.Success(new DeliveryOrder(
+        return new DeliveryOrder(
             id,
             orderNumber,
             senderCityResult.Value,
@@ -86,6 +86,6 @@ public sealed class DeliveryOrder
             recipientAddressResult.Value,
             cargoWeightResult.Value,
             pickupDate,
-            createdAtUtc));
+            createdAtUtc);
     }
 }

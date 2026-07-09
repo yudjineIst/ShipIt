@@ -49,8 +49,8 @@ else
                 <tr class="order-row" tabindex="0" @onclick="() => OpenOrder(order.Id)"
                     @onkeydown="args => HandleKeyDown(args, order.Id)">
                     <td><strong>@order.OrderNumber</strong></td>
-                    <td>@order.SenderCity<br /><span class="text-muted">@AddressDisplayFormatter.Format(order.SenderStreet, order.SenderHouse, order.SenderApartment)</span></td>
-                    <td>@order.RecipientCity<br /><span class="text-muted">@AddressDisplayFormatter.Format(order.RecipientStreet, order.RecipientHouse, order.RecipientApartment)</span></td>
+                    <td>@order.SenderCity<br /><span class="text-muted">@order.SenderAddress</span></td>
+                    <td>@order.RecipientCity<br /><span class="text-muted">@order.RecipientAddress</span></td>
                     <td class="order-weight">@order.CargoWeight.ToString("0.###")&nbsp;кг</td>
                     <td class="order-date">@order.PickupDate.ToString("dd MMM yyyy", RussianCulture)</td>
                 </tr>
@@ -58,13 +58,26 @@ else
             </tbody>
         </table>
     </div>
+
+    <div class="pagination-controls">
+        <button class="btn btn-outline-primary" @onclick="PreviousPageAsync" disabled="@(_pageNumber <= 1)">
+            Назад
+        </button>
+        <span class="text-muted">Страница @_pageNumber из @_totalPages</span>
+        <button class="btn btn-outline-primary" @onclick="NextPageAsync" disabled="@(_pageNumber >= _totalPages)">
+            Вперёд
+        </button>
+    </div>
 }
 
 @code {
+    private const int PageSize = 20;
     private IReadOnlyList<OrderListItem> _orders = [];
     private static readonly CultureInfo RussianCulture = CultureInfo.GetCultureInfo("ru-RU");
     private bool _isLoading = true;
     private string? _error;
+    private int _pageNumber = 1;
+    private int _totalPages;
 
     protected override Task OnInitializedAsync() => LoadOrdersAsync();
 
@@ -74,7 +87,10 @@ else
         _error = null;
         try
         {
-            _orders = await ApiClient.GetOrdersAsync();
+            var page = await ApiClient.GetOrdersAsync(_pageNumber, PageSize);
+            _orders = page.Items;
+            _pageNumber = page.PageNumber;
+            _totalPages = page.TotalPages;
         }
         catch (Exception exception)
         {
@@ -87,6 +103,28 @@ else
     }
 
     private void OpenOrder(Guid id) => Navigation.NavigateTo($"/orders/{id}");
+
+    private async Task PreviousPageAsync()
+    {
+        if (_pageNumber <= 1)
+        {
+            return;
+        }
+
+        _pageNumber--;
+        await LoadOrdersAsync();
+    }
+
+    private async Task NextPageAsync()
+    {
+        if (_pageNumber >= _totalPages)
+        {
+            return;
+        }
+
+        _pageNumber++;
+        await LoadOrdersAsync();
+    }
 
     private void HandleKeyDown(KeyboardEventArgs args, Guid id)
     {

@@ -31,7 +31,7 @@ public sealed class OrderRepository : IOrderRepository
         try
         {
             await _dbContext.SaveChangesAsync(cancellationToken);
-            return Result<DeliveryOrder>.Success(order);
+            return order;
         }
         catch (DbUpdateException exception)
         {
@@ -44,7 +44,7 @@ public sealed class OrderRepository : IOrderRepository
 
             _logger.LogError(exception, "Failed to create order {OrderId}", order.Id);
 
-            return Result<DeliveryOrder>.Failure(OrderErrors.DatabaseFailure);
+            return OrderErrors.DatabaseFailure;
         }
     }
 
@@ -59,14 +59,14 @@ public sealed class OrderRepository : IOrderRepository
                 .FirstOrDefaultAsync(order => order.Id == id, cancellationToken);
 
             if (order is null)
-                return Result<DeliveryOrder>.Failure(OrderErrors.NotFound(id));
+                return OrderErrors.NotFound(id);
 
-            return Result<DeliveryOrder>.Success(order);
+            return order;
         }
         catch (SqliteException exception)
         {
             _logger.LogError(exception, "Failed to received order {OrderId}", id);
-            return Result<DeliveryOrder>.Failure(OrderErrors.DatabaseFailure);
+            return OrderErrors.DatabaseFailure;
         }
     }
 
@@ -80,12 +80,12 @@ public sealed class OrderRepository : IOrderRepository
                 .OrderByDescending(order => order.CreatedAtUtc)
                 .ToListAsync(cancellationToken);
 
-            return Result<IReadOnlyList<DeliveryOrder>>.Success(orders);
+            return orders;
         }
         catch (SqliteException exception)
         {
             _logger.LogError(exception, "Failed to received orders");
-            return Result<IReadOnlyList<DeliveryOrder>>.Failure(OrderErrors.DatabaseFailure);
+            return OrderErrors.DatabaseFailure;
         }
     }
 
@@ -109,6 +109,6 @@ public sealed class OrderRepository : IOrderRepository
             order.Id,
             order.OrderNumber.Value);
 
-        return Result<DeliveryOrder>.Failure(OrderErrors.OrderNumberConflict);
+        return OrderErrors.OrderNumberConflict;
     }
 }

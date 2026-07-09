@@ -23,9 +23,9 @@ public sealed record CargoWeight
     public static Result<CargoWeight> Create(decimal value)
     {
         if (value <= MinValue)
-            return Result<CargoWeight>.Failure(OrderErrors.CargoWeightNotPositive);
+            return OrderErrors.CargoWeightNotPositive;
 
-        return Result<CargoWeight>.Success(new CargoWeight(value));
+        return new CargoWeight(value);
     }
 
     public override string ToString()

@@ -6,11 +6,23 @@ namespace ShipIt.Client.Services;
 
 public sealed class OrdersApiClient(HttpClient httpClient)
 {
-    public async Task<IReadOnlyList<OrderListItem>> GetOrdersAsync(CancellationToken cancellationToken = default)
+    public async Task<PagedResponse<OrderListItem>> GetOrdersAsync(
+        int pageNumber = 1,
+        int pageSize = 20,
+        CancellationToken cancellationToken = default)
     {
-        using var response = await httpClient.GetAsync("api/orders", cancellationToken);
+        using var response = await httpClient.GetAsync(
+            $"api/orders?pageNumber={pageNumber}&pageSize={pageSize}",
+            cancellationToken);
         await EnsureSuccessAsync(response, cancellationToken);
-        return await response.Content.ReadFromJsonAsync<List<OrderListItem>>(cancellationToken) ?? [];
+
+        var ordersPage = await response.Content.ReadFromJsonAsync<PagedResponse<OrderListItem>>(cancellationToken);
+        if (ordersPage is not null)
+        {
+            return ordersPage;
+        }
+
+        return new PagedResponse<OrderListItem>([], pageNumber, pageSize, 0, 0);
     }
 
     public async Task<OrderDetails?> GetOrderByIdAsync(Guid id, CancellationToken cancellationToken = default)
@@ -36,8 +48,11 @@ public sealed class OrdersApiClient(HttpClient httpClient)
         }
 
         var body = await response.Content.ReadAsStringAsync(cancellationToken);
-        var message = ReadErrorMessage(body)
-            ?? $"Сервер вернул ошибку {(int)response.StatusCode} ({response.ReasonPhrase}).";
+        var message = ReadErrorMessage(body);
+        if (message is null)
+        {
+            message = $"Сервер вернул ошибку {(int)response.StatusCode} ({response.ReasonPhrase}).";
+        }
 
         throw new HttpRequestException(message, null, response.StatusCode);
     }

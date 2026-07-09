@@ -1,10 +1,9 @@
-using FluentValidation;
-using ShipIt.Application.Features;
+using ShipIt.Application;
 using ShipIt.Infrastructure;
 
 namespace ShipIt.Api.Extensions;
 
-public static class ServiceCollectionExtensions
+public static class ApiDependencyInjection
 {
     public const string FrontendCorsPolicy = "Frontend";
     private const string FrontendOrigin = "http://localhost:5026";
@@ -18,12 +17,8 @@ public static class ServiceCollectionExtensions
         services.AddCors(options => options.AddPolicy(FrontendCorsPolicy, policy =>
             policy.WithOrigins(FrontendOrigin).AllowAnyHeader().AllowAnyMethod()));
 
+        services.AddApplication();
         services.AddInfrastructure(configuration);
-        services.AddScoped<IValidator<CreateOrderCommand>, CreateOrderValidator>();
-        services.AddSingleton<IOrderNumberGenerator, OrderNumberGenerator>();
-        services.AddScoped<CreateOrderHandler>();
-        services.AddScoped<GetOrdersHandler>();
-        services.AddScoped<GetOrderByIdHandler>();
 
         return services;
     }

@@ -1,4 +1,5 @@
 using ShipIt.Api.Extensions;
+using ShipIt.Api.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.AddApiLogging();
@@ -13,7 +14,8 @@ if (app.Environment.IsDevelopment())
     await app.ApplyMigrationsAndSeedAsync();
 }
 
-app.UseCors(ServiceCollectionExtensions.FrontendCorsPolicy);
+app.UseGlobalExceptionHandling();
+app.UseCors(ApiDependencyInjection.FrontendCorsPolicy);
 app.UseApiLogging();
 app.MapControllers();
 

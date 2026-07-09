@@ -25,10 +25,12 @@ public sealed class OrdersController : ControllerBase
 
     [HttpGet]
     public async Task<IActionResult> GetAll(
+        [FromQuery] GetOrdersRequest request,
         [FromServices] GetOrdersHandler handler,
         CancellationToken cancellationToken)
     {
-        var result = await handler.Handle(new GetOrdersQuery(), cancellationToken);
+        var query = request.ToQuery();
+        var result = await handler.Handle(query, cancellationToken);
 
         if (result.IsFailure)
             return result.Error.ToProblemDetails();

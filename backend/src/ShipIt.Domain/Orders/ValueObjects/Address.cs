@@ -27,12 +27,12 @@ public sealed record Address
     {
         if (string.IsNullOrWhiteSpace(street))
         {
-            return Result<Address>.Failure(OrderErrors.StreetRequired);
+            return OrderErrors.StreetRequired;
         }
 
         if (string.IsNullOrWhiteSpace(house))
         {
-            return Result<Address>.Failure(OrderErrors.HouseRequired);
+            return OrderErrors.HouseRequired;
         }
 
         var normalizedStreet = Normalize(street);
@@ -40,20 +40,20 @@ public sealed record Address
 
         if (normalizedStreet.Length < StreetMinLength || normalizedStreet.Length > StreetMaxLength)
         {
-            return Result<Address>.Failure(OrderErrors.StreetInvalid);
+            return OrderErrors.StreetInvalid;
         }
 
         if (normalizedHouse.Length > HouseMaxLength)
         {
-            return Result<Address>.Failure(OrderErrors.HouseInvalid);
+            return OrderErrors.HouseInvalid;
         }
 
         if (apartment <= 0)
         {
-            return Result<Address>.Failure(OrderErrors.ApartmentInvalid);
+            return OrderErrors.ApartmentInvalid;
         }
 
-        return Result<Address>.Success(new Address(normalizedStreet, normalizedHouse, apartment));
+        return new Address(normalizedStreet, normalizedHouse, apartment);
     }
 
     private static string Normalize(string value)

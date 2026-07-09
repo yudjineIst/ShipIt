@@ -20,14 +20,14 @@ public sealed record OrderNumber
     public static Result<OrderNumber> Create(string? value)
     {
         if (string.IsNullOrWhiteSpace(value))
-            return Result<OrderNumber>.Failure(OrderErrors.OrderNumberInvalid);
+            return OrderErrors.OrderNumberInvalid;
 
         string normalized = Normalize(value);
 
         if (normalized.Length > MaxLength)
-            return Result<OrderNumber>.Failure(OrderErrors.OrderNumberInvalid);
+            return OrderErrors.OrderNumberInvalid;
 
-        return Result<OrderNumber>.Success(new OrderNumber(normalized));
+        return new OrderNumber(normalized);
     }
 
     private static string Normalize(string value)

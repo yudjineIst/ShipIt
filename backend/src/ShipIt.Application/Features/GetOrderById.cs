@@ -39,7 +39,7 @@ public sealed class GetOrderByIdHandler(
             if (orderResult.Error.Type == ErrorType.NotFound)
                 logger.LogWarning("Order {OrderId} was not found", query.Id);
 
-            return Result<OrderDetailsResponse>.Failure(orderResult.Error);
+            return orderResult.Error;
         }
 
         var order = orderResult.Value;
@@ -59,6 +59,6 @@ public sealed class GetOrderByIdHandler(
             order.CreatedAtUtc);
 
         logger.LogInformation("Order {OrderId} was retrieved", query.Id);
-        return Result<OrderDetailsResponse>.Success(response);
+        return response;
     }
 }

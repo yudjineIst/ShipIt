@@ -21,14 +21,14 @@ public sealed record City
     public static Result<City> Create(string? value)
     {
         if (string.IsNullOrWhiteSpace(value))
-            return Result<City>.Failure(OrderErrors.CityRequired);
+            return OrderErrors.CityRequired;
 
         string normalized = Normalize(value);
 
         if (normalized.Length < MinLength || normalized.Length > MaxLength)
-            return Result<City>.Failure(OrderErrors.CityInvalid);
+            return OrderErrors.CityInvalid;
 
-        return Result<City>.Success(new City(normalized));
+        return new City(normalized);
     }
 
     private static string Normalize(string value)

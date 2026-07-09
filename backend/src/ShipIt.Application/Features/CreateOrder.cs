@@ -69,8 +69,7 @@ public sealed class CreateOrderHandler(
         {
             var message = string.Join(" ", validation.Errors.Select(error => error.ErrorMessage));
             logger.LogWarning("Order creation validation failed: {ValidationErrors}", message);
-            return Result<CreateOrderResponse>.Failure(new Error(
-                OrderErrors.ValidationFailed.Code, message, ErrorType.Validation));
+            return new Error(OrderErrors.ValidationFailed.Code, message, ErrorType.Validation);
         }
 
         var order = DeliveryOrder.Create(
@@ -90,7 +89,7 @@ public sealed class CreateOrderHandler(
         if (order.IsFailure)
         {
             logger.LogWarning("Order domain validation failed: {ErrorCode}", order.Error.Code);
-            return Result<CreateOrderResponse>.Failure(order.Error);
+            return order.Error;
         }
 
         var createdOrder = order.Value;
@@ -100,7 +99,7 @@ public sealed class CreateOrderHandler(
             cancellationToken);
 
         if (persistenceResult.IsFailure)
-            return Result<CreateOrderResponse>.Failure(persistenceResult.Error);
+            return persistenceResult.Error;
 
         logger.LogInformation(
             "Order {OrderId} with number {OrderNumber} was created",
@@ -111,6 +110,6 @@ public sealed class CreateOrderHandler(
             createdOrder.Id,
             createdOrder.OrderNumber.Value);
 
-        return Result<CreateOrderResponse>.Success(response);
+        return response;
     }
 }
